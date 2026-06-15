@@ -20,6 +20,8 @@
 
 ```
 vak-formatter/
+├── Dockerfile
+├── .dockerignore
 ├── server/                   # Node.js + Express
 │   ├── rules.txt             # правила оформления
 │   ├── src/
@@ -66,6 +68,18 @@ npm run dev
 ```
 
 Клиент: <http://localhost:5173>. Vite проксирует `/api/*` на backend.
+
+### 3. Docker (production-сборка)
+
+```bash
+docker build -t vak-formatter .
+docker run -p 8080:8080 \
+  -e OPENROUTER_API_KEY=sk-or-v1-... \
+  -e OPENROUTER_MODEL=... \
+  vak-formatter
+```
+
+Приложение доступно на <http://localhost:8080>. 
 
 ## API
 
