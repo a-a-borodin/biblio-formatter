@@ -4,7 +4,7 @@ import FormView from "./components/FormView.vue";
 import ResultView from "./components/ResultView.vue";
 import { useForm } from "./composables/useForm.js";
 
-const { text, result, errorMessage, isOverLimit, isLoading, submit, back } =
+const { text, sources, errorMessage, isOverLimit, isLoading, submit, back } =
   useForm();
 </script>
 
@@ -19,7 +19,7 @@ const { text, result, errorMessage, isOverLimit, isLoading, submit, back } =
         :aria-busy="isLoading"
       >
         <FormView
-          v-if="!result || isLoading"
+          v-if="!sources || isLoading"
           v-model:text="text"
           :is-loading="isLoading"
           :is-over-limit="isOverLimit"
@@ -27,7 +27,7 @@ const { text, result, errorMessage, isOverLimit, isLoading, submit, back } =
           @submit="submit"
         />
 
-        <ResultView v-else :result="result" @back="back" />
+        <ResultView v-else :sources="sources" @back="back" />
 
         <div
           v-if="isLoading"

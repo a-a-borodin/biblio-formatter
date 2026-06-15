@@ -1,33 +1,17 @@
 <script setup>
-import { computed } from "vue";
-import {
-  TAG_TYPES,
-  parseTags,
-  countTags,
-} from "../utils/highlightTags.js";
 import { useCopy } from "../composables/useCopy.js";
 
 const props = defineProps({
-  result: { type: String, required: true },
+  sources: { type: Array, required: true },
 });
 
 defineEmits(["back"]);
 
-const lines = computed(() =>
-  props.result
-    .split("\n")
-    .filter((line) => line.trim())
-    .map((line) => line.replace(/^\d+\.\s*/, ""))
-    .map((line) => parseTags(line)),
-);
-
-const stats = computed(() => countTags(props.result));
-
 const { isCopied, copy } = useCopy();
 
 const copyResult = () => {
-  const text = lines.value
-    .map((tokens, i) => `${i + 1}. ${tokens.map((t) => t.content).join("")}`)
+  const text = props.sources
+    .map((s, i) => `${i + 1}. ${s.corrected || ""}`)
     .join("\n");
   copy(text);
 };
@@ -38,38 +22,35 @@ const copyResult = () => {
     <header class="result__header">
       <div class="result__title-row">
         <h2 class="result__title">Результат</h2>
-        <div class="result__meta">
-          <div class="result__stats">
-            <span class="result__stat result__stat--source">
-              ● {{ stats.sourceTypes }} типов
-            </span>
-            <span class="result__stat result__stat--missing">
-              ● {{ stats.missing }} пропусков
-            </span>
-          </div>
-          <button type="button" class="result__back" @click="$emit('back')">
-            ← Новый список
-          </button>
-        </div>
+        <button type="button" class="result__back" @click="$emit('back')">
+          ← Новый список
+        </button>
       </div>
     </header>
 
     <div class="result__body">
       <ol class="result__list">
-        <li v-for="(line, idx) in lines" :key="idx" class="result__line">
-          <template v-for="(token, tIdx) in line" :key="`${idx}-${tIdx}`">
-            <mark
-              v-if="token.type === TAG_TYPES.SOURCE"
-              class="result__mark result__mark--source-type"
-              >{{ token.content }}</mark
+        <li v-for="(source, idx) in sources" :key="idx" class="result__item">
+          <div class="result__item-head">
+            <span class="result__num">{{ idx + 1 }}.</span>
+            <mark v-if="source.type" class="result__type">{{
+              source.type
+            }}</mark>
+          </div>
+          <p class="result__text">
+            <span v-if="source.corrected">{{ source.corrected }}</span>
+            <span v-else class="result__empty">—</span>
+          </p>
+          <ul v-if="source.missing_parts.length" class="result__gaps">
+            <li
+              v-for="(gap, gIdx) in source.missing_parts"
+              :key="gIdx"
+              class="result__gap"
             >
-            <mark
-              v-else-if="token.type === TAG_TYPES.MISSING"
-              class="result__mark result__mark--missing-arg"
-              >{{ token.content }}</mark
-            >
-            <span v-else class="result__text">{{ token.content }}</span>
-          </template>
+              <span class="result__gap-dot" aria-hidden="true">⚠</span>
+              {{ gap }}
+            </li>
+          </ul>
         </li>
       </ol>
     </div>

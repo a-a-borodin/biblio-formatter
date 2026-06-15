@@ -1,6 +1,5 @@
 import express from "express";
 import path from "node:path";
-import cors from "cors";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
@@ -15,21 +14,25 @@ const rules = await fs.readFile(config.rulesFilePath, "utf8");
 
 const app = express();
 app.use(express.json({ limit: "64kb" }));
-app.use(cors({ origin: config.corsOrigin }));
 
 const publicDir = path.join(__dirname, "..", "public");
 app.use(express.static(publicDir));
 
 app.post("/api/format", async (req, res, next) => {
+  const abortController = new AbortController();
+  res.on("close", () => abortController.abort());
+
   try {
     const { text } = validateFormatInput(req.body);
-    const result = await openRouterComplete({
+    const raw = await openRouterComplete({
       systemPrompt: buildSystemPrompt({ standardRules: rules }),
       userInput: text,
-      signal: req.signal,
+      signal: abortController.signal,
     });
-    res.json({ result });
+    const data = JSON.parse(raw);
+    res.json({ sources: data.sources || [] });
   } catch (err) {
+    if (!err.status) err.status = 500;
     next(err);
   }
 });

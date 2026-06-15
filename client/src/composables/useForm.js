@@ -5,16 +5,12 @@ export const MAX_LENGTH = 5000;
 export const useForm = () => {
   const text = ref("");
   const isLoading = ref(false);
-  const result = ref(null);
+  const sources = ref(null);
   const errorMessage = ref("");
-
-  let controller = null;
 
   const isOverLimit = computed(() => text.value.length > MAX_LENGTH);
 
   const submit = async () => {
-    controller?.abort();
-    controller = new AbortController();
     isLoading.value = true;
     errorMessage.value = "";
 
@@ -23,7 +19,6 @@ export const useForm = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text.value }),
-        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -33,19 +28,19 @@ export const useForm = () => {
         );
       }
 
-      result.value = (await response.json()).result;
+      const data = await response.json();
+      sources.value = data.sources;
     } catch (error) {
-      if (error.name !== "AbortError") errorMessage.value = error.message;
+      errorMessage.value = error.message;
     } finally {
       isLoading.value = false;
     }
   };
 
   const back = () => {
-    controller?.abort();
-    result.value = null;
+    sources.value = null;
     errorMessage.value = "";
   };
 
-  return { text, isLoading, result, errorMessage, isOverLimit, submit, back };
+  return { text, isLoading, sources, errorMessage, isOverLimit, submit, back };
 };
