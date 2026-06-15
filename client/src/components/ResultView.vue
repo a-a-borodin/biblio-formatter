@@ -3,7 +3,6 @@ import { computed } from "vue";
 import {
   TAG_TYPES,
   parseTags,
-  stripTags,
   countTags,
 } from "../utils/highlightTags.js";
 import { useCopy } from "../composables/useCopy.js";
@@ -18,12 +17,20 @@ const lines = computed(() =>
   props.result
     .split("\n")
     .filter((line) => line.trim())
+    .map((line) => line.replace(/^\d+\.\s*/, ""))
     .map((line) => parseTags(line)),
 );
 
 const stats = computed(() => countTags(props.result));
 
 const { isCopied, copy } = useCopy();
+
+const copyResult = () => {
+  const text = lines.value
+    .map((tokens, i) => `${i + 1}. ${tokens.map((t) => t.content).join("")}`)
+    .join("\n");
+  copy(text);
+};
 </script>
 
 <template>
@@ -72,7 +79,7 @@ const { isCopied, copy } = useCopy();
         type="button"
         class="result__copy"
         :class="{ 'result__copy--done': isCopied }"
-        @click="copy(stripTags(result))"
+        @click="copyResult"
         :aria-label="isCopied ? 'Скопировано' : 'Скопировать'"
         :title="isCopied ? 'Скопировано' : 'Скопировать'"
       >

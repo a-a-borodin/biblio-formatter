@@ -31,10 +31,4 @@ export const countTags = (text) => ({
   missing: (text.match(/<\?>/g) || []).length,
 });
 
-export const stripTags = (text) =>
-  text
-    .replace(/<@\/?>|<\?\/?>/g, "")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/  +/g, " ")
-    .trim();
+
