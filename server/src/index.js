@@ -1,6 +1,10 @@
 import express from "express";
+import path from "node:path";
 import cors from "cors";
 import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { config } from "./config.js";
 import { buildSystemPrompt } from "./prompt.js";
@@ -12,6 +16,9 @@ const rules = await fs.readFile(config.rulesFilePath, "utf8");
 const app = express();
 app.use(express.json({ limit: "64kb" }));
 app.use(cors({ origin: config.corsOrigin }));
+
+const publicDir = path.join(__dirname, "..", "public");
+app.use(express.static(publicDir));
 
 app.post("/api/format", async (req, res, next) => {
   try {
@@ -25,6 +32,10 @@ app.post("/api/format", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
 });
 
 app.use((_req, res) => {
